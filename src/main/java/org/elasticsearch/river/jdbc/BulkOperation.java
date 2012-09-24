@@ -18,8 +18,6 @@
  */
 package org.elasticsearch.river.jdbc;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -29,6 +27,9 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.VersionType;
+
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Send bulk data to Elasticsearch
@@ -59,6 +60,7 @@ public class BulkOperation implements Action {
         this.logger = logger;
         this.id = null;
         this.totalTimeouts = 0;
+
     }
     
     public BulkOperation setIndex(String index) {
@@ -197,6 +199,11 @@ public class BulkOperation implements Action {
             // waiting some minutes is much too long, do not wait any longer            
             throw new IOException("total flush() timeouts exceeded limit of + " + MAX_TOTAL_TIMEOUTS + ", aborting");
         }
+
+        if (currentBulk.get() == null) {
+            currentBulk.set(this.client.prepareBulk());
+        }
+
         if (currentBulk.get().numberOfActions() > 0) {
             processBulk();
         }

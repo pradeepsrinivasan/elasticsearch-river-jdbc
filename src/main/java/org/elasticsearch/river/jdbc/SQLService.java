@@ -18,28 +18,17 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.common.logging.ESLogger;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.DriverManager;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.common.logging.ESLogger;
+import java.util.Map;
 
 /**
  * The SQL service class manages the SQL access to the JDBC connection.
@@ -143,18 +132,18 @@ public class SQLService implements BulkAcknowledge {
     }
 
     /**
-     * Bind values to prepared statement
+     * Bind variables to prepared statement
      *
      * @param pstmt
-     * @param values
+     * @param variables
      * @throws SQLException
      */
-    public void bind(PreparedStatement pstmt, List<Object> values) throws SQLException {
-        if (values == null) {
+    public void bind(PreparedStatement pstmt, List<Object> variables, Map<String, Object> variableValues) throws SQLException {
+        if (variables == null) {
             return;
         }
-        for (int i = 1; i <= values.size(); i++) {
-            bind(pstmt, i, values.get(i - 1));
+        for (int i = 1; i <= variables.size(); i++) {
+            bind(pstmt, i, variables.get(i - 1), variableValues);
         }
     }
 
@@ -802,13 +791,20 @@ public class SQLService implements BulkAcknowledge {
         connection.close();
     }
 
-    private void bind(PreparedStatement pstmt, int i, Object value) throws SQLException {
+    private boolean isSplVariable(String var) {
+        List<String> splVariables = new ArrayList<String>();
+        splVariables.add("$now");
+        splVariables.add("$from");
+        return splVariables.contains(var);
+    }
+
+    private void bind(PreparedStatement pstmt, int i, Object value, Map<String, Object> variableValues) throws SQLException {
         if (value == null) {
             pstmt.setNull(i, Types.VARCHAR);
         } else if (value instanceof String) {
             String s = (String) value;
-            if ("$now".equals(s)) {
-                pstmt.setDate(i, new Date(new java.util.Date().getTime()));
+            if ( isSplVariable(s) ) {
+                bind(pstmt, i, variableValues.get(s), variableValues);
             } else {
                 pstmt.setString(i, (String) value);
             }

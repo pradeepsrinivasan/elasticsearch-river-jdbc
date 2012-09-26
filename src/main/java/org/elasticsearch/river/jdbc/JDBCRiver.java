@@ -187,7 +187,8 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     Long lastRanUnixTimeStamp;
                     // read state from _custom
                     client.admin().indices().prepareRefresh(riverIndexName).execute().actionGet();
-                    GetResponse get = client.prepareGet(riverIndexName, riverName().name(), "_custom").execute().actionGet();
+                    String metaId = "_custom." + indexName + "." + typeName;
+                    GetResponse get = client.prepareGet(riverIndexName, riverName().name(), metaId).execute().actionGet();
                     if (creationDate != null || !get.exists()) {
                         version = 1L;
                         digest = null;
@@ -236,7 +237,7 @@ public class JDBCRiver extends AbstractRiverComponent implements River {
                     builder.field("digest", merger.getDigest());
                     builder.field("lastRanUpto", now);
                     builder.endObject().endObject();
-                    client.prepareBulk().add(indexRequest(riverIndexName).type(riverName.name()).id("_custom").source(builder)).execute().actionGet();
+                    client.prepareBulk().add(indexRequest(riverIndexName).type(riverName.name()).id(metaId).source(builder)).execute().actionGet();
 //                    house keeping if data has changed
 //                    if (digest != null && !merger.getDigest().equals(digest)) {
 //                        housekeeper(version.longValue());

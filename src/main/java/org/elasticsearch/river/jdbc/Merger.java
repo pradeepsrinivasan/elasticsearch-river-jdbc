@@ -18,14 +18,16 @@
  */
 package org.elasticsearch.river.jdbc;
 
+import org.elasticsearch.common.Base64;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.elasticsearch.common.Base64;
-import org.elasticsearch.common.xcontent.XContentBuilder;
+
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 /**

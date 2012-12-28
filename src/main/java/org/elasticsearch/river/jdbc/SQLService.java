@@ -25,10 +25,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.sql.Date;
+import java.util.*;
 
 /**
  * The SQL service class manages the SQL access to the JDBC connection.
@@ -81,6 +79,7 @@ public class SQLService implements BulkAcknowledge {
      * @param jdbcURL
      * @param user
      * @param password
+     * @param readOnly
      * @return the connection
      * @throws ClassNotFoundException
      * @throws SQLException
@@ -754,11 +753,15 @@ public class SQLService implements BulkAcknowledge {
             }
         }
         if (id == null) {
-            id = Integer.toString(result.getRow());
+            id = getId();
         }
         if (listener != null) {
             listener.row(operation, index, type, id, keys, values);
         }
+    }
+
+    private String getId() {
+        return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
     /**
